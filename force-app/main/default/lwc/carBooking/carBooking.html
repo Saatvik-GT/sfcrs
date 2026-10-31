@@ -1,0 +1,227 @@
+<template>
+    <div class="page">
+        <!-- Fleet overview -->
+        <section class="overview">
+            <header class="overview-head">
+                <div>
+                    <p class="eyebrow">Fleet overview</p>
+                    <h1 class="overview-title">{todayLabel}</h1>
+                </div>
+                <button class="ghost-btn" onclick={loadStats} title="Refresh figures">Refresh</button>
+            </header>
+
+            <div class="metrics">
+                <template for:each={metricTiles} for:item="m">
+                    <div key={m.key} class="metric">
+                        <span class="metric-label">{m.label}</span>
+                        <span class="metric-value">{m.value}</span>
+                        <span class="metric-note">{m.note}</span>
+                    </div>
+                </template>
+            </div>
+
+            <div class="charts">
+                <div class="chart-card">
+                    <h2 class="chart-title">Bookings by status</h2>
+                    <div class="donut-wrap">
+                        <svg viewBox="0 0 42 42" class="donut" role="img" aria-label="Bookings by status">
+                            <circle cx="21" cy="21" r="15.915" fill="none" stroke="#e8ecf1" stroke-width="6"></circle>
+                            <template for:each={statusSlices} for:item="s">
+                                <circle key={s.label} cx="21" cy="21" r="15.915" fill="none" stroke={s.color}
+                                    stroke-width="6" stroke-dasharray={s.dash} stroke-dashoffset={s.offset}></circle>
+                            </template>
+                            <text x="21" y="20.5" class="donut-num">{totalBookings}</text>
+                            <text x="21" y="25.5" class="donut-cap">bookings</text>
+                        </svg>
+                        <ul class="legend">
+                            <template for:each={statusSlices} for:item="s">
+                                <li key={s.label}>
+                                    <span class="swatch" style={s.swatch}></span>
+                                    <span class="legend-label">{s.label}</span>
+                                    <span class="legend-val">{s.value} · {s.pct}%</span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h2 class="chart-title">Revenue by car</h2>
+                    <ul class="bars">
+                        <template for:each={revenueBars} for:item="r">
+                            <li key={r.label} class="bar-row">
+                                <span class="bar-label">{r.label}</span>
+                                <span class="bar-track"><span class="bar-fill" style={r.style}></span></span>
+                                <span class="bar-val">{r.amount}</span>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <div class="chart-card">
+                    <h2 class="chart-title">Fleet today</h2>
+                    <div class="util">
+                        <span class="util-num">{utilisation}%</span>
+                        <span class="util-cap">of usable cars are out on rent</span>
+                    </div>
+                    <div class="stack">
+                        <span class="stack-seg seg-rent" style={stackRent}></span>
+                        <span class="stack-seg seg-free" style={stackFree}></span>
+                        <span class="stack-seg seg-maint" style={stackMaint}></span>
+                    </div>
+                    <ul class="stack-legend">
+                        <li><span class="swatch seg-rent"></span>On rent {stats.onRentToday}</li>
+                        <li><span class="swatch seg-free"></span>Free {stats.availableToday}</li>
+                        <li><span class="swatch seg-maint"></span>Service {stats.inMaintenance}</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <div class="columns">
+            <!-- Booking flow -->
+            <section class="panel panel-main">
+                <template lwc:if={showConfirmation}>
+                    <div class="confirm">
+                        <span class="confirm-tick">✓</span>
+                        <div>
+                            <p class="confirm-title">Booking confirmed</p>
+                            <p class="confirm-line">Booking number <strong>{confirmation.bookingNumber}</strong></p>
+                            <p class="confirm-line">Total <strong><lightning-formatted-number value={confirmation.totalCost} format-style="currency" currency-code="INR"></lightning-formatted-number></strong></p>
+                        </div>
+                    </div>
+                    <button class="primary-btn" onclick={handleReset}>Make another booking</button>
+                </template>
+
+                <template lwc:else>
+                    <ol class="steps">
+                        <li class={stepOneClass}><span>1</span>Dates</li>
+                        <li class={stepTwoClass}><span>2</span>Car</li>
+                        <li class={stepThreeClass}><span>3</span>Details</li>
+                    </ol>
+
+                    <div class="search-row">
+                        <lightning-input type="date" label="Pickup" name="pickup" value={pickupDate} onchange={handleDateChange} required></lightning-input>
+                        <lightning-input type="date" label="Return" name="return" value={returnDate} onchange={handleDateChange} required></lightning-input>
+                        <button class="primary-btn" onclick={handleSearch}>Find cars</button>
+                    </div>
+
+                    <div class="ai-box">
+                        <span class="ai-label"><span class="ai-dot"></span>Not sure which car? Ask Einstein</span>
+                        <div class="ai-row">
+                            <lightning-textarea variant="label-hidden" label="Describe your trip" placeholder="e.g. 5 of us, Shimla trip with hill roads, keep it budget friendly" value={tripNeed} onchange={handleNeed} max-length="500"></lightning-textarea>
+                            <button class="primary-btn" onclick={handleAsk} disabled={aiThinking}>Suggest a car</button>
+                        </div>
+                        <template lwc:if={aiThinking}><p class="thinking">Comparing the free cars for your dates…</p></template>
+                        <template lwc:if={recommendation}>
+                            <div class="ai-pick">
+                                <div>
+                                    <p class="ai-car">{recommendation.vehicleName}</p>
+                                    <p class="ai-text">{recommendation.reason}</p>
+                                </div>
+                                <button class="ghost-btn dark" onclick={handleUsePick}>Choose this car</button>
+                            </div>
+                        </template>
+                        <template lwc:if={aiError}><p class="alert">{aiError}</p></template>
+                    </div>
+
+                    <template lwc:if={errorMessage}>
+                        <p class="alert">{errorMessage}</p>
+                    </template>
+
+                    <template lwc:if={searched}>
+                        <template lwc:if={hasVehicles}>
+                            <p class="result-meta"><strong>{vehicles.length}</strong> cars free for <strong>{days}</strong> day(s)</p>
+                            <div class="cars">
+                                <template for:each={vehicles} for:item="v">
+                                    <button key={v.Id} class={v.cardClass} data-id={v.Id} onclick={handleSelect}>
+                                        <template lwc:if={v.Image_URL__c}>
+                                            <img src={v.Image_URL__c} alt={v.Name} class="car-image" />
+                                        </template>
+                                        <template lwc:else>
+                                            <svg viewBox="0 0 200 90" class="car-image car-svg" style={v.carStyle} role="img" aria-label={v.Name}>
+                                                <path fill="currentColor" d="M12 62 L12 54 Q12 46 24 44 L42 38 Q52 22 74 20 L120 20 Q142 22 152 38 L178 44 Q190 46 190 56 L190 62 Q190 66 186 66 L16 66 Q12 66 12 62 Z"></path>
+                                                <path fill="#ffffff" fill-opacity="0.75" d="M56 38 Q62 27 76 26 L96 26 L96 38 Z M102 26 L118 26 Q132 27 140 38 L102 38 Z"></path>
+                                                <circle cx="50" cy="66" r="13" fill="#2b2b2b"></circle>
+                                                <circle cx="50" cy="66" r="5" fill="#cfd6de"></circle>
+                                                <circle cx="150" cy="66" r="13" fill="#2b2b2b"></circle>
+                                                <circle cx="150" cy="66" r="5" fill="#cfd6de"></circle>
+                                            </svg>
+                                        </template>
+                                        <span class="car-name">{v.Make__c} {v.Model__c}</span>
+                                        <span class="car-year">{v.Year__c}</span>
+                                        <span class="car-price">
+                                            <span class="rate"><lightning-formatted-number value={v.Daily_Rate__c} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number>/day</span>
+                                            <span class="total"><lightning-formatted-number value={v.total} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number></span>
+                                        </span>
+                                        <span class="pick">{v.buttonLabel}</span>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <p class="empty">No cars are free for those dates. Try moving the pickup a day earlier or later.</p>
+                        </template>
+                    </template>
+
+                    <template lwc:if={selectedVehicle}>
+                        <div class="details">
+                            <p class="details-title">Your details for the {selectedVehicle.Make__c} {selectedVehicle.Model__c}</p>
+                            <div class="form-grid">
+                                <lightning-input label="First name" name="firstName" onchange={handleFieldChange}></lightning-input>
+                                <lightning-input label="Last name" name="lastName" onchange={handleFieldChange} required></lightning-input>
+                                <lightning-input type="email" label="Email" name="email" onchange={handleFieldChange} required></lightning-input>
+                                <lightning-input type="tel" label="Phone" name="phone" onchange={handleFieldChange}></lightning-input>
+                            </div>
+                            <div class="summary">
+                                <span>{days} day(s) × <lightning-formatted-number value={selectedVehicle.Daily_Rate__c} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number></span>
+                                <strong><lightning-formatted-number value={selectedTotal} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number></strong>
+                            </div>
+                            <button class="primary-btn wide" onclick={handleBook} disabled={isBooking}>Confirm booking</button>
+                        </div>
+                    </template>
+                </template>
+            </section>
+
+            <!-- Manage booking -->
+            <aside class="panel panel-side">
+                <h2 class="side-title">Manage my booking</h2>
+                <p class="side-sub">Enter the email you booked with.</p>
+                <lightning-input type="email" label="Email" variant="label-hidden" placeholder="you@example.com" value={lookupEmail} onchange={handleLookupEmail}></lightning-input>
+                <button class="ghost-btn dark wide" onclick={handleFindBookings}>Find my bookings</button>
+
+                <template lwc:if={manageError}>
+                    <p class="alert">{manageError}</p>
+                </template>
+                <template lwc:if={manageMessage}>
+                    <p class="ok">{manageMessage}</p>
+                </template>
+
+                <template lwc:if={hasMyBookings}>
+                    <ul class="trips">
+                        <template for:each={myBookings} for:item="b">
+                            <li key={b.bookingId} class="trip">
+                                <div class="trip-top">
+                                    <strong>{b.vehicleName}</strong>
+                                    <span class="tag">{b.bookingNumber}</span>
+                                </div>
+                                <p class="trip-dates">
+                                    <lightning-formatted-date-time value={b.pickupDate} time-zone="UTC" day="numeric" month="short"></lightning-formatted-date-time>
+                                    →
+                                    <lightning-formatted-date-time value={b.returnDate} time-zone="UTC" day="numeric" month="short" year="numeric"></lightning-formatted-date-time>
+                                </p>
+                                <div class="trip-bottom">
+                                    <lightning-formatted-number value={b.totalCost} format-style="currency" currency-code="INR" maximum-fraction-digits="0"></lightning-formatted-number>
+                                    <button class="link-danger" data-id={b.bookingId} onclick={handleCancel}>Cancel</button>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+                <template lwc:elseif={lookupDone}>
+                    <p class="empty">No reserved bookings for that email.</p>
+                </template>
+            </aside>
+        </div>
+    </div>
+</template>
