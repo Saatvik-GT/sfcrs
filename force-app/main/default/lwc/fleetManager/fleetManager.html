@@ -1,0 +1,96 @@
+<template>
+    <div class="page">
+        <section class="hero">
+            <header class="hero-head">
+                <div>
+                    <p class="eyebrow">Fleet</p>
+                    <h1 class="hero-title">{cars.length} cars on the books</h1>
+                </div>
+                <button class="ghost-btn" onclick={toggleForm}>{formButtonLabel}</button>
+            </header>
+            <div class="metrics">
+                <template for:each={metricTiles} for:item="m">
+                    <div key={m.key} class="metric">
+                        <span class="metric-label">{m.label}</span>
+                        <span class="metric-value">{m.value}</span>
+                        <span class="metric-note">{m.note}</span>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <template lwc:if={showForm}>
+            <section class="panel">
+                <h2 class="panel-title">Add a car</h2>
+                <div class="form-grid">
+                    <lightning-input label="Short name" name="name" placeholder="Nexon" onchange={handleField} required></lightning-input>
+                    <lightning-input label="Make" name="make" placeholder="Tata" onchange={handleField}></lightning-input>
+                    <lightning-input label="Model" name="model" placeholder="Nexon EV" onchange={handleField}></lightning-input>
+                    <lightning-input label="Year" name="year" placeholder="2025" onchange={handleField}></lightning-input>
+                    <lightning-input type="number" label="Daily rate (₹)" name="rate" min="1" onchange={handleField} required></lightning-input>
+                    <div class="form-action">
+                        <button class="primary-btn" onclick={handleAdd} disabled={busy}>Add to fleet</button>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2 class="panel-title">All cars</h2>
+                <div class="chips">
+                    <template for:each={filterChips} for:item="f">
+                        <button key={f.value} class={f.cls} data-value={f.value} onclick={handleFilter}>{f.label}</button>
+                    </template>
+                </div>
+            </div>
+
+            <template lwc:if={error}><p class="alert">{error}</p></template>
+            <template lwc:if={notice}><p class="ok">{notice}</p></template>
+
+            <div class="grid">
+                <template for:each={visibleCars} for:item="c">
+                    <article key={c.id} class="car">
+                        <div class="car-top">
+                            <template lwc:if={c.imageUrl}>
+                                <img src={c.imageUrl} alt={c.name} class="car-img" />
+                            </template>
+                            <template lwc:else>
+                                <svg viewBox="0 0 200 90" class="car-img car-svg" style={c.carStyle} role="img" aria-label={c.name}>
+                                    <path fill="currentColor" d="M12 62 L12 54 Q12 46 24 44 L42 38 Q52 22 74 20 L120 20 Q142 22 152 38 L178 44 Q190 46 190 56 L190 62 Q190 66 186 66 L16 66 Q12 66 12 62 Z"></path>
+                                    <path fill="#ffffff" fill-opacity="0.75" d="M56 38 Q62 27 76 26 L96 26 L96 38 Z M102 26 L118 26 Q132 27 140 38 L102 38 Z"></path>
+                                    <circle cx="50" cy="66" r="13" fill="#2b2b2b"></circle>
+                                    <circle cx="50" cy="66" r="5" fill="#cfd6de"></circle>
+                                    <circle cx="150" cy="66" r="13" fill="#2b2b2b"></circle>
+                                    <circle cx="150" cy="66" r="5" fill="#cfd6de"></circle>
+                                </svg>
+                            </template>
+                            <span class={c.pillClass}>{c.stateLabel}</span>
+                        </div>
+                        <div class="car-body">
+                            <div class="car-name-row">
+                                <span class="car-name">{c.make} {c.model}</span>
+                                <span class="car-rate">{c.rateLabel}<span class="muted">/day</span></span>
+                            </div>
+                            <span class="muted small">{c.year} · {c.name}</span>
+                            <dl class="stats">
+                                <div><dt>Bookings</dt><dd>{c.bookings}</dd></div>
+                                <div><dt>Revenue</dt><dd>{c.revenueLabel}</dd></div>
+                                <div><dt>Next pickup</dt><dd>{c.nextLabel}</dd></div>
+                            </dl>
+                            <div class="share">
+                                <span class="share-fill" style={c.shareStyle}></span>
+                            </div>
+                            <span class="muted small">{c.sharePct}% of fleet revenue</span>
+                            <div class="car-actions">
+                                <button class="small-btn" data-id={c.id} data-status={c.toggleTo} onclick={handleToggle} disabled={busy}>{c.toggleLabel}</button>
+                                <a class="link" href={c.recordUrl}>Open record</a>
+                            </div>
+                        </div>
+                    </article>
+                </template>
+            </div>
+            <template lwc:if={noCars}><p class="empty">No cars match this filter.</p></template>
+        </section>
+    </div>
+</template>
