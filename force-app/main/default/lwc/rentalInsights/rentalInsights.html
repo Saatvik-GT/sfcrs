@@ -1,0 +1,109 @@
+<template>
+    <div class="page">
+        <section class="hero">
+            <header class="hero-head">
+                <div>
+                    <p class="eyebrow">Insights</p>
+                    <h1 class="hero-title">How the business is doing</h1>
+                </div>
+                <button class="ghost-btn" onclick={load}>Refresh</button>
+            </header>
+            <div class="metrics">
+                <template for:each={metricTiles} for:item="m">
+                    <div key={m.key} class="metric">
+                        <span class="metric-label">{m.label}</span>
+                        <span class="metric-value">{m.value}</span>
+                        <span class="metric-note">{m.note}</span>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <section class="ai-box">
+            <div class="ai-head">
+                <span class="ai-label"><span class="ai-dot"></span>Einstein summary</span>
+                <button class="small-btn" onclick={handleSummary} disabled={thinking}>{summaryButton}</button>
+            </div>
+            <template lwc:if={thinking}><p class="thinking">Reading this month's figures…</p></template>
+            <template lwc:elseif={summary}><p class="ai-text">{summary}</p></template>
+            <template lwc:else><p class="thinking">Ask Einstein for a three-line read of the numbers below: what is working, what needs attention, and one thing to do this week.</p></template>
+            <template lwc:if={aiError}><p class="alert">{aiError}</p></template>
+        </section>
+
+        <div class="row-2">
+            <section class="panel">
+                <h2 class="panel-title">Revenue by pickup month</h2>
+                <div class="cols">
+                    <template for:each={months} for:item="m">
+                        <div key={m.label} class="col">
+                            <span class="col-val">{m.short}</span>
+                            <span class="col-track"><span class="col-fill" style={m.style}></span></span>
+                            <span class="col-label">{m.label}</span>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Bookings by status</h2>
+                <div class="donut-wrap">
+                    <svg viewBox="0 0 42 42" class="donut" role="img" aria-label="Bookings by status">
+                        <circle cx="21" cy="21" r="15.915" fill="none" stroke="#e8ecf1" stroke-width="6"></circle>
+                        <template for:each={statusSlices} for:item="s">
+                            <circle key={s.label} cx="21" cy="21" r="15.915" fill="none" stroke={s.color}
+                                stroke-width="6" stroke-dasharray={s.dash} stroke-dashoffset={s.offset}></circle>
+                        </template>
+                        <text x="21" y="20.5" class="donut-num">{totalBookings}</text>
+                        <text x="21" y="25.5" class="donut-cap">bookings</text>
+                    </svg>
+                    <ul class="legend">
+                        <template for:each={statusSlices} for:item="s">
+                            <li key={s.label}>
+                                <span class="swatch" style={s.swatch}></span>
+                                <span>{s.label}</span>
+                                <span class="muted">{s.value} · {s.pct}%</span>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <div class="row-2">
+            <section class="panel">
+                <h2 class="panel-title">Revenue by car</h2>
+                <ul class="bars">
+                    <template for:each={revenueBars} for:item="r">
+                        <li key={r.label} class="bar-row">
+                            <span>{r.label}</span>
+                            <span class="bar-track"><span class="bar-fill" style={r.style}></span></span>
+                            <span class="bar-val">{r.amount}</span>
+                        </li>
+                    </template>
+                </ul>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Upcoming pickups</h2>
+                <template lwc:if={hasUpcoming}>
+                    <ul class="plain-list">
+                        <template for:each={upcoming} for:item="u">
+                            <li key={u.id} class="up">
+                                <span class="up-date">
+                                    <span class="up-day">{u.day}</span>
+                                    <span class="up-mon">{u.mon}</span>
+                                </span>
+                                <span class="up-main">
+                                    <strong>{u.vehicleName}</strong>
+                                    <span class="muted">{u.customerName} · {u.bookingNumber}</span>
+                                </span>
+                                <span class="up-amt">{u.total}</span>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+                <template lwc:else><p class="empty">No reserved pickups from today onwards.</p></template>
+            </section>
+        </div>
+    </div>
+</template>
