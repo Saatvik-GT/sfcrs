@@ -1,0 +1,127 @@
+@import 'c/rentalTheme';
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.25rem 0.75rem;
+}
+
+.form-action {
+    display: flex;
+    align-items: flex-end;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.85rem;
+}
+
+.car {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.car-top {
+    position: relative;
+    background: #f3f6fa;
+}
+
+.car-img {
+    display: block;
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.car-svg {
+    padding: 0.8rem 1.4rem;
+    box-sizing: border-box;
+}
+
+.car-pill {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+}
+
+.car-body {
+    padding: 0.75rem 0.85rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.car-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.car-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.car-rate {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.small {
+    font-size: 0.75rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    margin: 0.6rem 0 0.5rem;
+}
+
+.stats dt {
+    font-size: 0.68rem;
+    color: var(--muted);
+}
+
+.stats dd {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.share {
+    height: 6px;
+    background: #eef2f6;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.share-fill {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+}
+
+.car-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.7rem;
+}
+
+.link {
+    font-size: 0.78rem;
+    color: var(--blue);
+}
+
+@media (max-width: 800px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
