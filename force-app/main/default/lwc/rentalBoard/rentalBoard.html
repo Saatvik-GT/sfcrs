@@ -1,0 +1,104 @@
+<template>
+    <div class="page">
+        <section class="hero">
+            <header class="hero-head">
+                <div>
+                    <p class="eyebrow">Rentals</p>
+                    <h1 class="hero-title">{headline}</h1>
+                </div>
+                <button class="ghost-btn" onclick={load}>Refresh</button>
+            </header>
+            <div class="metrics">
+                <template for:each={metricTiles} for:item="m">
+                    <div key={m.key} class="metric">
+                        <span class="metric-label">{m.label}</span>
+                        <span class="metric-value">{m.value}</span>
+                        <span class="metric-note">{m.note}</span>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2 class="panel-title">Next 14 days</h2>
+                <div class="key">
+                    <span><span class="swatch sw-res"></span>Reserved</span>
+                    <span><span class="swatch sw-act"></span>Active</span>
+                    <span><span class="swatch sw-svc"></span>In service</span>
+                </div>
+            </div>
+            <div class="timeline" role="table" aria-label="Car availability for the next 14 days">
+                <div class="tl-row tl-head" role="row">
+                    <span class="tl-car" role="columnheader"></span>
+                    <template for:each={days} for:item="d">
+                        <span key={d.iso} class={d.cls} role="columnheader">
+                            <span class="tl-dow">{d.dow}</span>
+                            <span class="tl-day">{d.day}</span>
+                        </span>
+                    </template>
+                </div>
+                <template for:each={timelineRows} for:item="r">
+                    <div key={r.id} class="tl-row" role="row">
+                        <span class="tl-car" role="rowheader">{r.name}</span>
+                        <template for:each={r.cells} for:item="c">
+                            <span key={c.key} class={c.cls} title={c.title} role="cell"></span>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <h2 class="panel-title">Bookings</h2>
+                <div class="tools">
+                    <div class="chips">
+                        <template for:each={statusChips} for:item="f">
+                            <button key={f.value} class={f.cls} data-value={f.value} onclick={handleStatus}>{f.label}</button>
+                        </template>
+                    </div>
+                    <lightning-input type="search" variant="label-hidden" label="Search bookings" placeholder="Search car, customer or BK number" onchange={handleSearch} class="search"></lightning-input>
+                </div>
+            </div>
+
+            <template lwc:if={error}><p class="alert">{error}</p></template>
+            <template lwc:if={notice}><p class="ok">{notice}</p></template>
+
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Booking</th>
+                        <th>Car</th>
+                        <th>Customer</th>
+                        <th>Dates</th>
+                        <th class="num">Total</th>
+                        <th>Status</th>
+                        <th class="act"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={visibleRows} for:item="b">
+                        <tr key={b.id}>
+                            <td><a href={b.url}>{b.bookingNumber}</a></td>
+                            <td>{b.vehicleName}</td>
+                            <td>
+                                <span class="cust">{b.customerName}</span>
+                                <span class="muted small">{b.customerEmail}</span>
+                            </td>
+                            <td>{b.dates}<span class="muted small">{b.nights} day(s)</span></td>
+                            <td class="num">{b.total}</td>
+                            <td><span class={b.pill}>{b.status}</span></td>
+                            <td class="act">
+                                <template for:each={b.actions} for:item="a">
+                                    <button key={a.to} class={a.cls} data-id={b.id} data-to={a.to} onclick={handleMove} disabled={busy}>{a.label}</button>
+                                </template>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <template lwc:if={noRows}><p class="empty">No bookings match.</p></template>
+        </section>
+    </div>
+</template>
