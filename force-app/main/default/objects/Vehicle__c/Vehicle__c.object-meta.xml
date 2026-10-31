@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Vehicle</label>
+    <pluralLabel>Vehicles</pluralLabel>
+    <nameField>
+        <label>Vehicle Name</label>
+        <type>Text</type>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <description>A car available for rent</description>
+</CustomObject>
